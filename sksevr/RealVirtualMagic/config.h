@@ -17,11 +17,6 @@ namespace RealVirtualMagic
 	extern int logging;
 	extern int useDebugger;
 
-	// bci processing parameters
-	extern int historyLength;
-	extern int historyLengthCalibration;
-	extern float brainOffset;
-	extern float brainScale;
 
 	// game parameters
 	extern float minMagickaRate;
@@ -34,11 +29,6 @@ namespace RealVirtualMagic
 	extern unsigned short hapticFrequency;
 	extern int hapticStrength;
 
-	// brainflow parameters
-	extern int boardID;
-	extern int serialPortID;
-	extern int logBrainData;
-	extern int timeout;
 
 	//Other parameters
 	extern bool leftHandedMode;

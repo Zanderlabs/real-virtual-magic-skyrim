@@ -3,15 +3,16 @@
 
 #include "config.h"
 #include "MenuChecker.h"
-#include "brainflow\board_shim.h"
-#include "brainflow\data_filter.h"
+#include "lsl\lsl_cpp.h"
 
 
 namespace RealVirtualMagic
 {
-	const std::string MOD_VERSION = "0.2.0";
+	const std::string MOD_VERSION = "0.3.0";
 
 	void CreateSystem();
-	double GetBrainData();
+	void InitializeIXRStream();
+	void CreateEventStream();
+	double GetFocusValue();
 	void WriteEventMarker(float eventType);
 }

@@ -75,7 +75,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>version.lib;openvr_api.lib;delayimp.lib;BoardController.lib;Brainflow.lib;DataHandler.lib;MLModule.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;openvr_api.lib;delayimp.lib;lsl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>RealVirtualMagic.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
@@ -140,10 +140,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="brainflow\board_shim.h" />
-    <ClInclude Include="brainflow\data_filter.h" />
-    <ClInclude Include="brainflow\json.hpp" />
-    <ClInclude Include="brainflow\ml_model.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="dirent.h" />
     <ClInclude Include="Engine.h" />

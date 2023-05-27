@@ -124,7 +124,7 @@ namespace RealVirtualMagic
 		if (runOnce == false)
 		{
 			runOnce = true;
-			
+
 			//This stuff runs only once after game loaded
 
 
@@ -166,7 +166,7 @@ namespace RealVirtualMagic
 	{
 		while (IsCasting())
 		{
-			Sleep(10);
+			Sleep(50);
 		}
 		EndCast();
 
@@ -179,106 +179,124 @@ namespace RealVirtualMagic
 
 	void GameLogic()
 	{
+		// set up the LSL stream
 		CreateSystem();
+		Sleep(10000);
 
-		//your game logic runs forever here
+		// game logic runs forever here
 		while (true)
 		{
-			if (systemInitialized)
+			// this will be true only when the LSL stream is there
+			if (IXRInitialized)
 			{
 				LOG("------------------");
 
-				latestBrainPower = GetBrainData();
+				float newBrainPower = GetFocusValue();
 
-				LOG("final brain power: %f", latestBrainPower);
-
-				if ((*g_thePlayer) != nullptr && (*g_thePlayer)->loadedState != nullptr && !isGameStopped()) //Player is alive and Menu is not open
+				// only do actual game stuff if the brain power has changed
+				if (newBrainPower != latestBrainPower)
 				{
+					latestBrainPower = newBrainPower;
 
-					BSFixedString jumpDistance("fCombatMagickaRegenRateMult");
+					LOG("final focus value: %f", latestBrainPower);
 
-					SettingCollectionMap* settings = *g_gameSettingCollection;
-					if (settings)
+					if ((*g_thePlayer) != nullptr && (*g_thePlayer)->loadedState != nullptr && !isGameStopped()) //Player is alive and Menu is not open
 					{
-						Setting* dsetting = settings->Get(jumpDistance.data);
-						if (dsetting)
+
+						BSFixedString jumpDistance("fCombatMagickaRegenRateMult");
+
+						SettingCollectionMap* settings = *g_gameSettingCollection;
+						if (settings)
 						{
-							//Getting:
-							//double jumpDist = 0.0;
-							//dsetting->GetDouble(&jumpDist);
+							Setting* dsetting = settings->Get(jumpDistance.data);
+							if (dsetting)
+							{
+								//Getting:
+								//double jumpDist = 0.0;
+								//dsetting->GetDouble(&jumpDist);
 
-							//Setting:
-							dsetting->SetDouble(1.0);
+								//Setting:
+								dsetting->SetDouble(1.0);
+							}
 						}
-					}
 
-					/*
-					if (GetMagickaRate() != 0)
-					{
-						SetMagickaRate(0);
-					}
-					*/
+						/*
+						if (GetMagickaRate() != 0)
+						{
+							SetMagickaRate(0);
+						}
+						*/
 
-					/*
-					float maxmagicka = 10000;
-					//LOG_ERR("old max magicka: %f", GetMaxMagicka());
-					//LOG_ERR("old current magicka before setting max: %f", GetCurrentMagicka());
+						/*
+						float maxmagicka = 10000;
+						//LOG_ERR("old max magicka: %f", GetMaxMagicka());
+						//LOG_ERR("old current magicka before setting max: %f", GetCurrentMagicka());
 
-					if (GetMaxMagicka() != maxmagicka) SetMaxMagicka(maxmagicka);
+						if (GetMaxMagicka() != maxmagicka) SetMaxMagicka(maxmagicka);
 
-					float maxMagicka = GetMaxMagicka();
-					float currentmagicka = GetCurrentMagicka();
-					float newbrainmagicka = GetMaxMagicka() * brain_power;
+						float maxMagicka = GetMaxMagicka();
+						float currentmagicka = GetCurrentMagicka();
+						float newbrainmagicka = GetMaxMagicka() * brain_power;
 
-					LOG("max magicka: %f", maxMagicka);
-					LOG("current magicka: %f", currentmagicka);
-					LOG("setting current magicka relative to brain power: %f", newbrainmagicka);
+						LOG("max magicka: %f", maxMagicka);
+						LOG("current magicka: %f", currentmagicka);
+						LOG("setting current magicka relative to brain power: %f", newbrainmagicka);
 
-					float magickachange = (maxmagicka - currentmagicka) - (maxmagicka - newbrainmagicka);
-					ChangeCurrentMagicka(magickachange);
+						float magickachange = (maxmagicka - currentmagicka) - (maxmagicka - newbrainmagicka);
+						ChangeCurrentMagicka(magickachange);
 
-					Sleep(50);
+						Sleep(50);
 
-					LOG("new current magicka after changing: %f", GetCurrentMagicka());
-
-					*/
-
-					float currentdestruction = GetDestruction();
-					float newdestruction = minSpellpower + latestBrainPower * (maxSpellpower - minSpellpower);
-					LOG("destruction: %f", currentdestruction);
-					LOG("setting magic power: %f", newdestruction);
-					SetAllMagickPower(newdestruction);
-
-					LOG("magicka rate: %f", GetMagickaRate());
-					float newmagickarate = minMagickaRate + latestBrainPower * (maxMagickaRate - minMagickaRate);
-					if (newmagickarate > 0)
-					{
-						LOG("setting magicka rate: %f", newmagickarate);
-						SetMagickaRate(newmagickarate);
-					}
-					else
-					{
-						float maxmagicka = GetMaxMagicka();
-						float magickadamage = maxmagicka - (maxmagicka * (100 + newmagickarate) / 100);
-						LOG("new magicka rate negative, damaging magicka by %f percent, resulting in a damage of %f magicka", newmagickarate, magickadamage);
-						LOG("setting magicka rate: %f", 0);
-						SetMagickaRate(0);
-						LOG("current magicka: %f", GetCurrentMagicka());
-						ChangeCurrentMagicka(-magickadamage);
 						LOG("new current magicka after changing: %f", GetCurrentMagicka());
+
+						*/
+
+						float currentdestruction = GetDestruction();
+						float newdestruction = minSpellpower + latestBrainPower * (maxSpellpower - minSpellpower);
+						LOG("destruction: %f", currentdestruction);
+						LOG("setting magic power: %f", newdestruction);
+						SetAllMagickPower(newdestruction);
+
+						LOG("magicka rate: %f", GetMagickaRate());
+						float newmagickarate = minMagickaRate + latestBrainPower * (maxMagickaRate - minMagickaRate);
+						if (newmagickarate > 0)
+						{
+							LOG("setting magicka rate: %f", newmagickarate);
+							SetMagickaRate(newmagickarate);
+						}
+						else
+						{
+							float maxmagicka = GetMaxMagicka();
+							float magickadamage = (maxmagicka - (maxmagicka * (100 + newmagickarate) / 100)) / 10; // we expect a new focus value every 100ms so this should damage 1/10 of the desired damage
+							LOG("new magicka rate negative, damaging magicka by %f percent, resulting in a damage of %f magicka", newmagickarate, magickadamage);
+							LOG("setting magicka rate: %f", 0);
+							SetMagickaRate(0);
+							LOG("current magicka: %f", GetCurrentMagicka());
+							if (GetCurrentMagicka() > 10)
+							{
+								ChangeCurrentMagicka(-magickadamage);
+								LOG("new current magicka after changing: %f", GetCurrentMagicka());
+							}
+							else
+							{
+								LOG("magicka was too low, did not damage to prevent crash");
+							}
+						}
+
+						// wait for a bit to make sure the new settings are applied before logging
+						Sleep(20);
+						LOG("new destruction: %f", GetDestruction());
+						LOG("new magicka rate: %f", GetMagickaRate());
 					}
-
-
-					Sleep(100);
-					LOG("new destruction: %f", GetDestruction());
-					LOG("new magicka rate: %f", GetMagickaRate());
-
 				}
-				Sleep(1100); //Sleep for a second
 			}
 			else
 			{
+				LOG("IXR not initialized. Attempting to create LSL system again.");
+				// set up the LSL stream
 				CreateSystem();
+
+				Sleep(10000);
 			}
 		}
 	}
@@ -295,7 +313,7 @@ namespace RealVirtualMagic
 		//You can create a thread here like this and run all your game logic in that
 		std::thread t1(GameLogic);
 		t1.detach();
-				
+
 	}
 
 	void WaitForDebugger(bool should_break = false) {
@@ -326,7 +344,7 @@ namespace RealVirtualMagic
 
 	void StartCast()
 	{
-		if (systemInitialized)
+		if (IXRInitialized)
 		{
 			WriteEventMarker(1);
 
@@ -347,7 +365,7 @@ namespace RealVirtualMagic
 
 	void EndCast()
 	{
-		if (systemInitialized)
+		if (IXRInitialized)
 		{
 			WriteEventMarker(2);
 		}

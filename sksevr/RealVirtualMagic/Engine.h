@@ -12,7 +12,7 @@
 
 namespace RealVirtualMagic 
 {
-	extern bool systemInitialized;
+	extern bool IXRInitialized;
 
 	extern double latestBrainPower;
 

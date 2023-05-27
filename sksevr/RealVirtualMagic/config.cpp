@@ -7,12 +7,6 @@ namespace RealVirtualMagic
 	int logging = 1;
 	int useDebugger = false;
 
-	// bci processing parameters
-	int historyLength = 20;
-	int historyLengthCalibration = 250;
-	float brainOffset = 0.3;
-	float brainScale = 1.0;
-
 	// game parameters
 	float minMagickaRate = -3;
 	float maxMagickaRate = 7;
@@ -24,15 +18,8 @@ namespace RealVirtualMagic
 	unsigned short hapticFrequency = 15;
 	int hapticStrength = 1;
 
-	// brainflow parameters
-	int boardID = -1;
-	int serialPortID = 0;
-	int logBrainData = 0;
-	int timeout = 60;
-
 	//Other parameters
 	bool leftHandedMode = false;
-
 
 	void loadConfig()
 	{
@@ -75,14 +62,6 @@ namespace RealVirtualMagic
 							{
 								logging = variableValue;
 							}
-							else if (variableName == "historyLength")
-							{
-								historyLength = variableValue;
-							}
-							else if (variableName == "historyLengthCalibration")
-							{
-								historyLengthCalibration = variableValue;
-							}
 							else if (variableName == "hapticFrequency")
 							{
 								hapticFrequency = variableValue;
@@ -115,33 +94,9 @@ namespace RealVirtualMagic
 							{
 								unstableMagicThreshold = GetConfigSettingsFloatValue(line, variableName);
 							}
-							else if (variableName == "boardID")
-							{
-								boardID = variableValue;
-							}
-							else if (variableName == "timeout")
-							{
-								timeout = variableValue;
-							}
-							else if (variableName == "serialPortID")
-							{
-								serialPortID = variableValue;
-							}
-							else if (variableName == "logBrainData")
-							{
-								logBrainData = variableValue;
-							}
 							else if (variableName == "useDebugger")
 							{
 								useDebugger = variableValue;
-							}
-							else if (variableName == "brainOffset")
-							{
-								brainOffset = GetConfigSettingsFloatValue(line, variableName);
-							}
-							else if (variableName == "brainScale")
-							{
-								brainScale = GetConfigSettingsFloatValue(line, variableName);
 							}
 							else
 							{

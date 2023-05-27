@@ -19,28 +19,11 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="MenuChecker.h" />
     <ClInclude Include="openvr.h" />
-    <ClInclude Include="brainflow\board_shim.h">
-      <Filter>brainflow</Filter>
-    </ClInclude>
-    <ClInclude Include="brainflow\data_filter.h">
-      <Filter>brainflow</Filter>
-    </ClInclude>
-    <ClInclude Include="brainflow\ml_model.h">
-      <Filter>brainflow</Filter>
-    </ClInclude>
-    <ClInclude Include="brainflow\json.hpp">
-      <Filter>brainflow</Filter>
-    </ClInclude>
     <ClInclude Include="Helper.h" />
     <ClInclude Include="rvminterface001.h" />
     <ClInclude Include="rvmpluginapi.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="RealVirtualMagic.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="brainflow">
-      <UniqueIdentifier>{a9d2aa32-2851-426c-857d-9a1fafe49129}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
 </Project>

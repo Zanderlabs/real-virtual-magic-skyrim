@@ -27,9 +27,9 @@ namespace RealVirtualMagic
 		LOG("Changing Magicka by %g", amount);
 		//(*g_thePlayer)->actorValueOwner.RestoreActorValue((amount < 0) ? 2 : 4, 26, abs(amount));
 
-		//std::thread t3(ChangeCurrentMagickaFunc, amount);
-		//t3.detach();
-		ChangeCurrentMagickaFunc(amount);
+		std::thread t3(ChangeCurrentMagickaFunc, amount);
+		t3.detach();
+		//ChangeCurrentMagickaFunc(amount);
 	}
 
 	void ChangeCurrentMagickaFunc(float amount)
@@ -118,6 +118,23 @@ namespace RealVirtualMagic
 
 	void SetAllMagickPower(float new_power)
 	{
+		(*g_thePlayer)->actorValueOwner.SetCurrent(147, new_power);
+		(*g_thePlayer)->actorValueOwner.SetCurrent(148, new_power);
+		(*g_thePlayer)->actorValueOwner.SetCurrent(149, new_power);
+		(*g_thePlayer)->actorValueOwner.SetCurrent(150, new_power);
+		(*g_thePlayer)->actorValueOwner.SetCurrent(151, new_power);
+		/*
+			kAlterationPowerModifier = 147,
+			kConjurationPowerModifier = 148,
+			kDestructionPowerModifier = 149,
+			kIllusionPowerModifier = 150,
+			kRestorationPowerModifier = 151,
+		*/
+	}
+
+
+	void SetAllDamageResist(float new_power)
+	{
 		(*g_thePlayer)->actorValueOwner.SetCurrent(39, new_power);
 		(*g_thePlayer)->actorValueOwner.SetCurrent(40, new_power);
 		(*g_thePlayer)->actorValueOwner.SetCurrent(41, new_power);
@@ -133,23 +150,6 @@ namespace RealVirtualMagic
 			kResistFrost = 43,
 			kResistMagic = 44,
 			kResistDisease = 45,
-		*/
-	}
-
-
-	void SetAllDamageResist(float new_power)
-	{
-		(*g_thePlayer)->actorValueOwner.SetCurrent(147, new_power);
-		(*g_thePlayer)->actorValueOwner.SetCurrent(148, new_power);
-		(*g_thePlayer)->actorValueOwner.SetCurrent(149, new_power);
-		(*g_thePlayer)->actorValueOwner.SetCurrent(150, new_power);
-		(*g_thePlayer)->actorValueOwner.SetCurrent(151, new_power);
-		/*
-			kAlterationPowerModifier = 147,
-			kConjurationPowerModifier = 148,
-			kDestructionPowerModifier = 149,
-			kIllusionPowerModifier = 150,
-			kRestorationPowerModifier = 151,
 		*/
 	}
 
