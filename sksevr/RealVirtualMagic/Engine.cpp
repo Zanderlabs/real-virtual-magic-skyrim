@@ -3,7 +3,10 @@
 
 namespace RealVirtualMagic
 {
+	bool runOnce = false; 
+
 	double latestBrainPower = 0.0;
+	bool isInCombat = false;
 
 	std::atomic<bool> LeftHandSpellCastingOn;
 	std::atomic<bool> RightHandSpellCastingOn;
@@ -16,7 +19,8 @@ namespace RealVirtualMagic
 	typedef uint64_t(*IAnimationGraphManagerHolder_NotifyAnimationGraph_VFunc)(uintptr_t* iagmh, BSFixedString* animName);
 	IAnimationGraphManagerHolder_NotifyAnimationGraph_VFunc g_originalNotifyAnimationGraph = nullptr; // Normally a JMP to 0x00501530
 	static RelocPtr<IAnimationGraphManagerHolder_NotifyAnimationGraph_VFunc> IAnimationGraphManagerHolder_NotifyAnimationGraph_vtbl(0x016E2BF8);
-	bool runOnce = false; uint64_t Hooked_IAnimationGraphManagerHolder_NotifyAnimationGraph(uintptr_t* iAnimationGraphManagerHolder, BSFixedString* animationName)
+	
+	uint64_t Hooked_IAnimationGraphManagerHolder_NotifyAnimationGraph(uintptr_t* iAnimationGraphManagerHolder, BSFixedString* animationName)
 	{
 		//_MESSAGE("Called %s", animationName->data);
 
@@ -121,16 +125,20 @@ namespace RealVirtualMagic
 
 	void GameLoad()
 	{
+		if ((bool)useDebugger)
+		{
+			WaitForDebugger(true);
+		}
+
 		if (runOnce == false)
 		{
 			runOnce = true;
 
 			//This stuff runs only once after game loaded
-
+			LoadGlobalValues();
 
 		}
 	}
-
 
 	void HandHapticFeedbackEffect(bool left)
 	{
@@ -166,7 +174,7 @@ namespace RealVirtualMagic
 	{
 		while (IsCasting())
 		{
-			Sleep(50);
+			Sleep(22); // 1 frame with reprojection in most HMDs
 		}
 		EndCast();
 
@@ -179,18 +187,26 @@ namespace RealVirtualMagic
 
 	void GameLogic()
 	{
-		// set up the LSL stream
+		// set up the LSL stream in the beginning
 		CreateSystem();
-		Sleep(10000);
 
 		// game logic runs forever here
 		while (true)
 		{
+			if (ActorInCombat(*g_thePlayer) && !isInCombat)
+			{
+				WriteEventMarker("start:combat");
+				isInCombat = true;
+			}
+			else if (!ActorInCombat(*g_thePlayer) && isInCombat)
+			{
+				WriteEventMarker("stop:combat");
+				isInCombat = false;
+			}
+
 			// this will be true only when the LSL stream is there
 			if (IXRInitialized)
 			{
-				LOG("------------------");
-
 				float newBrainPower = GetFocusValue();
 
 				// only do actual game stuff if the brain power has changed
@@ -198,116 +214,28 @@ namespace RealVirtualMagic
 				{
 					latestBrainPower = newBrainPower;
 
+					LOG("------------------");
 					LOG("final focus value: %f", latestBrainPower);
 
-					if ((*g_thePlayer) != nullptr && (*g_thePlayer)->loadedState != nullptr && !isGameStopped()) //Player is alive and Menu is not open
-					{
+					ApplyFocusValue(latestBrainPower);
 
-						BSFixedString jumpDistance("fCombatMagickaRegenRateMult");
-
-						SettingCollectionMap* settings = *g_gameSettingCollection;
-						if (settings)
-						{
-							Setting* dsetting = settings->Get(jumpDistance.data);
-							if (dsetting)
-							{
-								//Getting:
-								//double jumpDist = 0.0;
-								//dsetting->GetDouble(&jumpDist);
-
-								//Setting:
-								dsetting->SetDouble(1.0);
-							}
-						}
-
-						/*
-						if (GetMagickaRate() != 0)
-						{
-							SetMagickaRate(0);
-						}
-						*/
-
-						/*
-						float maxmagicka = 10000;
-						//LOG_ERR("old max magicka: %f", GetMaxMagicka());
-						//LOG_ERR("old current magicka before setting max: %f", GetCurrentMagicka());
-
-						if (GetMaxMagicka() != maxmagicka) SetMaxMagicka(maxmagicka);
-
-						float maxMagicka = GetMaxMagicka();
-						float currentmagicka = GetCurrentMagicka();
-						float newbrainmagicka = GetMaxMagicka() * brain_power;
-
-						LOG("max magicka: %f", maxMagicka);
-						LOG("current magicka: %f", currentmagicka);
-						LOG("setting current magicka relative to brain power: %f", newbrainmagicka);
-
-						float magickachange = (maxmagicka - currentmagicka) - (maxmagicka - newbrainmagicka);
-						ChangeCurrentMagicka(magickachange);
-
-						Sleep(50);
-
-						LOG("new current magicka after changing: %f", GetCurrentMagicka());
-
-						*/
-
-						float currentdestruction = GetDestruction();
-						float newdestruction = minSpellpower + latestBrainPower * (maxSpellpower - minSpellpower);
-						LOG("destruction: %f", currentdestruction);
-						LOG("setting magic power: %f", newdestruction);
-						SetAllMagickPower(newdestruction);
-
-						LOG("magicka rate: %f", GetMagickaRate());
-						float newmagickarate = minMagickaRate + latestBrainPower * (maxMagickaRate - minMagickaRate);
-						if (newmagickarate > 0)
-						{
-							LOG("setting magicka rate: %f", newmagickarate);
-							SetMagickaRate(newmagickarate);
-						}
-						else
-						{
-							float maxmagicka = GetMaxMagicka();
-							float magickadamage = (maxmagicka - (maxmagicka * (100 + newmagickarate) / 100)) / 10; // we expect a new focus value every 100ms so this should damage 1/10 of the desired damage
-							LOG("new magicka rate negative, damaging magicka by %f percent, resulting in a damage of %f magicka", newmagickarate, magickadamage);
-							LOG("setting magicka rate: %f", 0);
-							SetMagickaRate(0);
-							LOG("current magicka: %f", GetCurrentMagicka());
-							if (GetCurrentMagicka() > 10)
-							{
-								ChangeCurrentMagicka(-magickadamage);
-								LOG("new current magicka after changing: %f", GetCurrentMagicka());
-							}
-							else
-							{
-								LOG("magicka was too low, did not damage to prevent crash");
-							}
-						}
-
-						// wait for a bit to make sure the new settings are applied before logging
-						Sleep(20);
-						LOG("new destruction: %f", GetDestruction());
-						LOG("new magicka rate: %f", GetMagickaRate());
-					}
+					Sleep(50); // we expect new values every roughly 50ms
 				}
 			}
 			else
 			{
-				LOG("IXR not initialized. Attempting to create LSL system again.");
+				LOG_ERR("IXR not initialized. Attempting to create LSL system.");
+				LOG_ERR("Setting focus to 0.5 to allow playing");
+				ApplyFocusValue(0.5f);
 				// set up the LSL stream
 				CreateSystem();
-
-				Sleep(10000);
 			}
 		}
 	}
 
 	void StartFunction()
 	{
-		if ((bool)useDebugger)
-		{
-			WaitForDebugger(true);
-		}
-
+		
 		LeftHandedModeChange();
 
 		//You can create a thread here like this and run all your game logic in that
@@ -344,30 +272,151 @@ namespace RealVirtualMagic
 
 	void StartCast()
 	{
-		if (IXRInitialized)
-		{
-			WriteEventMarker(1);
+		WriteEventMarker("start:magicCast");
 
-			if (latestBrainPower < unstableMagicThreshold)
-			{
-				float maxhealth = GetMaxHealth();
-				float healthdamage = maxhealth * unstableMagicDamage / 100;
-				LOG("damaging health by %f percent, resulting in a damage of %f health", unstableMagicDamage, healthdamage);
-				LOG("current health: %f", GetCurrentHealth());
-				std::thread t3(ChangeCurrentHealth, -healthdamage);
-				t3.detach();
-				//ChangeCurrentHealth(-healthdamage);
-				LOG("new current health after changing: %f", GetCurrentHealth());
-			}
+		if (IXRInitialized && latestBrainPower < unstableMagicThreshold)
+		{
+			float maxhealth = GetMaxHealth();
+			float healthdamage = maxhealth * unstableMagicDamage / 100;
+			LOG("damaging health by %f percent, resulting in a damage of %f health", unstableMagicDamage, healthdamage);
+			LOG("current health: %f", GetCurrentHealth());
+			std::thread t3(ChangeCurrentHealth, -healthdamage);
+			t3.detach();
+			//ChangeCurrentHealth(-healthdamage);
+			LOG("new current health after changing: %f", GetCurrentHealth());
 		}
 	}
 
 
 	void EndCast()
 	{
-		if (IXRInitialized)
+		WriteEventMarker("stop:magicCast");
+	}
+
+	void ApplyFocusValue(float newFocus)
+	{
+		LOG("applying focus value of %f", newFocus);
+		if ((*g_thePlayer) != nullptr && (*g_thePlayer)->loadedState != nullptr && !isGameStopped()) //Player is alive and Menu is not open
 		{
-			WriteEventMarker(2);
+			/*
+			// applying magicka regen
+			BSFixedString magickaRegenRate("fCombatMagickaRegenRateMult");
+
+			SettingCollectionMap* settings = *g_gameSettingCollection;
+			if (settings)
+			{
+				Setting* dsetting = settings->Get(magickaRegenRate.data);
+				if (dsetting)
+				{
+					//Getting:
+					//double jumpDist = 0.0;
+					//dsetting->GetDouble(&jumpDist);
+
+					//Setting:
+					dsetting->SetDouble(1.0);
+				}
+			}
+			*/
+
+			// applying magic power
+			float currentdestruction = GetDestruction();
+			float newdestruction = minSpellpower + newFocus * (maxSpellpower - minSpellpower);
+			LOG("destruction: %f", currentdestruction);
+			LOG("setting magic power: %f", newdestruction);
+			SetAllMagickPower(newdestruction);
+
+			// applying magicka regen
+			LOG("magicka rate: %f", GetMagickaRate());
+			float newmagickarate = minMagickaRate + newFocus * (maxMagickaRate - minMagickaRate);
+			if (newmagickarate > 0)
+			{
+				LOG("setting magicka rate: %f", newmagickarate);
+				SetMagickaRate(newmagickarate);
+			}
+			else
+			{
+				// manual damage to magicka
+				float maxmagicka = GetMaxMagicka();
+				float magickadamage = (maxmagicka - (maxmagicka * (100 + newmagickarate) / 100)) / 20; // we expect a new focus value every 50ms so this should damage 1/20 of the desired damage, TODO make this dependent on the passed time
+				LOG("new magicka rate negative, damaging magicka by %f percent, resulting in a damage of %f magicka", newmagickarate, magickadamage);
+				LOG("setting magicka rate: %f", 0);
+				SetMagickaRate(0);
+				LOG("current magicka: %f", GetCurrentMagicka());
+				if (GetCurrentMagicka() > 10)
+				{
+					ChangeCurrentMagicka(-magickadamage);
+					LOG("new current magicka after changing: %f", GetCurrentMagicka());
+				}
+				else
+				{
+					LOG("magicka was below 10, did not damage to prevent crashes");
+				}
+			}
+
+			// scale runes
+			LOG("before scaling");
+			if (strangeRunesModIndex != 9999)
+			{
+				LOG("in scaling");
+
+				BSFixedString runeNodeName("RotNode");
+				BSFixedString subRuneNodeName("Rune");
+				BSFixedString leftHandNodeName("NPC L Hand [LHnd]");
+				BSFixedString rightHandNodeName("NPC R Hand [RHnd]");
+
+				float newScale = 0.5f + newFocus;
+
+				NiNode* rootNodeTP = (*g_thePlayer)->GetNiRootNode(0);
+
+				NiNode* rootNodeFP = (*g_thePlayer)->GetNiRootNode(2);
+
+				NiNode* mostInterestingRoot = (rootNodeFP != nullptr) ? rootNodeFP : rootNodeTP;
+
+				if (mostInterestingRoot)
+				{
+					LOG("In mostInterestingRoot");
+					NiAVObject* lefthand_node = mostInterestingRoot->GetObjectByName(&leftHandNodeName.data);
+					NiAVObject* righthand_node = mostInterestingRoot->GetObjectByName(&rightHandNodeName.data);
+					if (lefthand_node != nullptr)
+					{
+						LOG("In left hand");
+						NiAVObject* leftRuneNode = lefthand_node->GetObjectByName(&runeNodeName.data);
+						if (leftRuneNode != nullptr)
+						{
+							LOG("in left RotNode");
+							NiAVObject* leftRuneNodeSubRune = leftRuneNode->GetObjectByName(&subRuneNodeName.data);
+							if (leftRuneNodeSubRune != nullptr)
+							{
+								LOG("Scaling left rune");
+								leftRuneNodeSubRune->m_localTransform.scale = newScale;
+							}
+						}
+					}
+					if (righthand_node != nullptr)
+					{
+						LOG("In right hand");
+						NiAVObject* rightRuneNode = righthand_node->GetObjectByName(&runeNodeName.data);
+						if (rightRuneNode != nullptr)
+						{
+							LOG("in right RotNode");
+							NiAVObject* rightRuneNodeSubRune = rightRuneNode->GetObjectByName(&subRuneNodeName.data);
+							if (rightRuneNodeSubRune != nullptr)
+							{
+								LOG("Scaling right rune");
+								rightRuneNodeSubRune->m_localTransform.scale = newScale;
+							}
+						}
+					}
+				}
+			}
+
+
+			// wait for a bit to make sure the new settings are applied before logging
+			// Sleep(50);
+
+			LOG("new destruction: %f", GetDestruction());
+			LOG("new magicka rate: %f", GetMagickaRate());
+
 		}
 	}
 }

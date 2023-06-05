@@ -14,5 +14,5 @@ namespace RealVirtualMagic
 	void InitializeIXRStream();
 	void CreateEventStream();
 	double GetFocusValue();
-	void WriteEventMarker(float eventType);
+	void WriteEventMarker(const std::string& eventType);
 }

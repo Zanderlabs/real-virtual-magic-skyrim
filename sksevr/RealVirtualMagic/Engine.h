@@ -26,6 +26,7 @@ namespace RealVirtualMagic
 	void HookAnimations();
 	void StartCast();
 	void EndCast();
+	void ApplyFocusValue(float newFocus);
 
 	bool RegisterFuncs(VMClassRegistry* registry);
 }

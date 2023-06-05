@@ -27,14 +27,14 @@ namespace RealVirtualMagic
 	stream_outlet* eventOutlet = nullptr;
 
 	int creationCounter = 0;
-	int creationCounterMax = 30; // LSL is re-initialized every 10s if it hadnt found a stream after 5s. so after 5 minutes we give up
+	int creationCounterMax = 9999999; // LSL is re-initialized every 10s if it hadnt found a stream after 5s. set this to a lower number to give up at some point
 
 
 	void InitializeIXRStream()
 	{
 		IXRIsInitializing = true;
 		LOG_ERR("Resolving LSL streams");
-		std::vector<stream_info> results = resolve_stream("type", "IXR-metric", 1, 5.0); // this line determines the LSL stream that we are searching. it aborts after 5 seconds
+		std::vector<stream_info> results = resolve_stream("type", "IXR-metric", 1, 5.0); // this line determines the LSL stream that we are searching. it aborts after 5s
 		if (results.empty()) {
 			LOG_ERR("No LSL streams found!");
 		}
@@ -45,7 +45,7 @@ namespace RealVirtualMagic
 			LOG_ERR("Creating stream inlet");
 			IXRStream = new stream_inlet(results[0]);  // Create a new stream_inlet with the resolved stream_info
 
-			LOG_ERR("stream inlet created");
+			LOG_ERR("--------------- IXR Suite connected!!! ---------------");
 			IXRInitialized = true;
 		}
 		IXRIsInitializing = false;
@@ -54,18 +54,17 @@ namespace RealVirtualMagic
 	void CreateEventStream()
 	{
 		eventMarkersIsInitializing = true;
-		LOG_ERR("Creating event stream outlet");
+		LOG_ERR("Creating event marker stream outlet");
 		// Marker streams are irregular and usually have channel format string
 		stream_info info("RVM-events", "Markers", 1, IRREGULAR_RATE, cf_string, "RVM_Events_01");
 		eventOutlet = new stream_outlet(info);  // Create a new stream_outlet with the defined stream_info
 		eventMarkersIsInitializing = false;
 		eventMarkersInitialized = true;
-		LOG_ERR("Event stream outlet created");
+		LOG_ERR("--------------- Marker stream created!!! ---------------");
 	}
 
 	void CreateSystem()
 	{
-		
 		if (creationCounter < creationCounterMax)
 		{
 			creationCounter++;
@@ -83,6 +82,9 @@ namespace RealVirtualMagic
 				t2.detach();
 			}
 		}
+
+		// wait for 10s to make sure there are no two initialization processes going on
+		Sleep(10000);
 	}
 
 
@@ -104,7 +106,7 @@ namespace RealVirtualMagic
 			delete IXRStream;
 			IXRStream = nullptr;
 			IXRInitialized = false;
-			LOG_ERR("No sample available. LSL stream closed.");
+			LOG_ERR("--------------- No sample available. IXRStream stream inlet closed!!! ---------------");
 			return 0.0;
 		}
 
@@ -112,20 +114,19 @@ namespace RealVirtualMagic
 		return static_cast<double>(sample[0]);
 	}
 
-
-	void WriteEventMarker(float eventType)
+	void WriteEventMarker(const std::string& eventType)
 	{
 		//board->insert_marker(eventType);
-		LOG("marker: %f", eventType);
+		LOG("marker: %s", eventType.c_str());
 
 		// Send the event marker via LSL
 		if (!eventMarkersInitialized) {
-			LOG_ERR("LSL event marker stream is not initialized. Attempting to initialize.");
+			LOG("LSL event marker stream is not initialized. Attempting to initialize.");
 			CreateSystem();
 			return;
 		}
 		std::vector<std::string> sample(1);
-		sample[0] = std::to_string(eventType);
+		sample[0] = eventType;
 		eventOutlet->push_sample(sample);
 	}
 }
