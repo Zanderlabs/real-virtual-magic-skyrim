@@ -5,7 +5,8 @@ namespace RealVirtualMagic
 		
 	//Config parameters
 	int logging = 1;
-	int useDebugger = false;
+	int useDebugger = 0;
+	int useBCI = 1;
 
 	// game parameters
 	float minMagickaRate = -3;
@@ -98,6 +99,10 @@ namespace RealVirtualMagic
 							{
 								useDebugger = variableValue;
 							}
+							else if (variableName == "useBCI")
+							{
+								useBCI = variableValue;
+							}
 							else
 							{
 								_MESSAGE("Unknown ini key: %s", variableName.c_str());
@@ -106,6 +111,7 @@ namespace RealVirtualMagic
 					}
 				}
 			}
+
 			_MESSAGE("Config file is loaded successfully.");
 			return;
 		}

@@ -195,41 +195,46 @@ namespace RealVirtualMagic
 		{
 			if (ActorInCombat(*g_thePlayer) && !isInCombat)
 			{
-				WriteEventMarker("start:combat");
+				WriteEventMarker("combat:start");
 				isInCombat = true;
 			}
 			else if (!ActorInCombat(*g_thePlayer) && isInCombat)
 			{
-				WriteEventMarker("stop:combat");
+				WriteEventMarker("combat:stop");
 				isInCombat = false;
 			}
 
-			// this will be true only when the LSL stream is there
-			if (IXRInitialized)
-			{
-				float newBrainPower = GetFocusValue();
-
-				// only do actual game stuff if the brain power has changed
-				if (newBrainPower != latestBrainPower)
+			// we need the option to run the mod to provide events, but not apply the actual brain power
+			if (useBCI == 1) {
+				
+				// this will be true only when the LSL stream is there
+				if (IXRInitialized)
 				{
-					latestBrainPower = newBrainPower;
+					float newBrainPower = GetFocusValue();
 
-					LOG("------------------");
-					LOG("final focus value: %f", latestBrainPower);
+					// only do actual game stuff if the brain power has changed
+					if (newBrainPower != latestBrainPower)
+					{
+						latestBrainPower = newBrainPower;
 
-					ApplyFocusValue(latestBrainPower);
+						LOG("------------------");
+						LOG("final focus value: %f", latestBrainPower);
 
-					Sleep(50); // we expect new values every roughly 50ms
+						ApplyFocusValue(latestBrainPower);
+
+						Sleep(50); // we expect new values every roughly 50ms
+					}
+				}
+				else
+				{
+					LOG_ERR("IXR not initialized. Attempting to create LSL system.");
+					LOG_ERR("Setting focus to 0.5 to allow playing");
+					ApplyFocusValue(0.5f);
+					// set up the LSL stream
+					CreateSystem();
 				}
 			}
-			else
-			{
-				LOG_ERR("IXR not initialized. Attempting to create LSL system.");
-				LOG_ERR("Setting focus to 0.5 to allow playing");
-				ApplyFocusValue(0.5f);
-				// set up the LSL stream
-				CreateSystem();
-			}
+			
 		}
 	}
 
@@ -272,9 +277,9 @@ namespace RealVirtualMagic
 
 	void StartCast()
 	{
-		WriteEventMarker("start:magicCast");
+		WriteEventMarker("magicCast:start");
 
-		if (IXRInitialized && latestBrainPower < unstableMagicThreshold)
+		if (useBCI == 1 && IXRInitialized && latestBrainPower < unstableMagicThreshold)
 		{
 			float maxhealth = GetMaxHealth();
 			float healthdamage = maxhealth * unstableMagicDamage / 100;
@@ -290,7 +295,7 @@ namespace RealVirtualMagic
 
 	void EndCast()
 	{
-		WriteEventMarker("stop:magicCast");
+		WriteEventMarker("magicCast:stop");
 	}
 
 	void ApplyFocusValue(float newFocus)

@@ -16,6 +16,7 @@ namespace RealVirtualMagic
 	//Config parameters
 	extern int logging;
 	extern int useDebugger;
+	extern int useBCI;
 
 
 	// game parameters
@@ -32,7 +33,6 @@ namespace RealVirtualMagic
 
 	//Other parameters
 	extern bool leftHandedMode;
-
 
 
 	void Log(const int msgLogLevel, const char* fmt, ...);
