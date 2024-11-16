@@ -103,7 +103,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;version.lib;openvr_api.lib;BoardController.lib;BrainBitLib.lib;Brainflow.lib;BrainFlowBluetooth.lib;DataHandler.lib;DSPFilters.lib;GanglionLib.lib;MLModule.lib;MuseLib.lib;WaveLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;version.lib;openvr_api.lib;lsl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>RealVirtualMagic.def</ModuleDefinitionFile>
       <DelayLoadDLLs>
       </DelayLoadDLLs>
