@@ -8,7 +8,7 @@
 
 namespace RealVirtualMagic
 {
-	const std::string MOD_VERSION = "0.3.0";
+	const std::string MOD_VERSION = "0.4.1";
 
 	void CreateSystem();
 	void InitializeIXRStream();

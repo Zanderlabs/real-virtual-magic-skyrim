@@ -97,10 +97,11 @@ namespace RealVirtualMagic
 		}
 
 		// Create a buffer for the incoming sample
-		std::vector<float> sample;
+		std::vector<double> sample;
 
 		// Pull the next sample from the IXRStream
 		double timestamp = IXRStream->pull_sample(sample,5.0); // this will block if no stream is available at the moment and continue as soon as it is
+		
 
 		if (sample.empty() || sample[0]==0.0){
 			delete IXRStream;
@@ -111,7 +112,8 @@ namespace RealVirtualMagic
 		}
 
 		// Returning the first value in the sample
-		return static_cast<double>(sample[0]);
+		LOG("LSL-timestamp: %f, sample[0]: %f", timestamp, sample[0]);
+		return sample[0];
 	}
 
 	void WriteEventMarker(const std::string& eventType)

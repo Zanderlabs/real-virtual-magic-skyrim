@@ -210,20 +210,14 @@ namespace RealVirtualMagic
 				// this will be true only when the LSL stream is there
 				if (IXRInitialized)
 				{
-					float newBrainPower = GetFocusValue();
+					latestBrainPower = GetFocusValue();
 
-					// only do actual game stuff if the brain power has changed
-					if (newBrainPower != latestBrainPower)
-					{
-						latestBrainPower = newBrainPower;
+					LOG("------------------");
+					LOG("latest focus value: %f", latestBrainPower);
 
-						LOG("------------------");
-						LOG("final focus value: %f", latestBrainPower);
+					ApplyFocusValue(latestBrainPower);
 
-						ApplyFocusValue(latestBrainPower);
-
-						Sleep(50); // we expect new values every roughly 50ms
-					}
+					Sleep(50); // we expect new values every roughly 50ms
 				}
 				else
 				{
@@ -298,7 +292,7 @@ namespace RealVirtualMagic
 		WriteEventMarker("magicCast:stop");
 	}
 
-	void ApplyFocusValue(float newFocus)
+	void ApplyFocusValue(double newFocus)
 	{
 		LOG("applying focus value of %f", newFocus);
 		if ((*g_thePlayer) != nullptr && (*g_thePlayer)->loadedState != nullptr && !isGameStopped()) //Player is alive and Menu is not open
@@ -370,6 +364,7 @@ namespace RealVirtualMagic
 				BSFixedString rightHandNodeName("NPC R Hand [RHnd]");
 
 				float newScale = 0.5f + newFocus;
+				LOG("new scale: %f", newScale);
 
 				NiNode* rootNodeTP = (*g_thePlayer)->GetNiRootNode(0);
 
